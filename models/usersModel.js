@@ -15,15 +15,29 @@ const getAllUsers = async () => {
 const findUserByEmail = async (email) => {
   try {
     const { rows } = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-    console.log(`SELECT * FROM users WHERE email = ${email} ${rows}`);
-    return rows[0]; // Return the first user if found
+    return rows[0]; 
   } catch (error) {
     console.error('Error fetching user by email:', error);
     throw error;
   }
 };
 
+const createUser = async (user) => {
+  try {
+    const { name, email, password } = user;
+    const { rows } = await pool.query(
+      `INSERT INTO users (name, email, password, created_at)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING id, name, email`,
+      [name, email, password]
+    );
+    return rows[0];
+  } catch (error) {
+    console.error('Error creating user:', error);
+    throw error;
+  }
+};
 
 module.exports = {
-  getAllUsers, findUserByEmail
+  getAllUsers, findUserByEmail, createUser
 };
