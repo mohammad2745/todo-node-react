@@ -24,12 +24,13 @@ const findUserByEmail = async (email) => {
 
 const createUser = async (user) => {
   try {
-    const { name, email, password } = user;
+    const { name, email, password, profilePic } = user;
+    
     const { rows } = await pool.query(
-      `INSERT INTO users (name, email, password, created_at)
-       VALUES ($1, $2, $3, NOW())
-       RETURNING id, name, email`,
-      [name, email, password]
+      `INSERT INTO users (name, email, password, image, created_at)
+       VALUES ($1, $2, $3, $4, NOW())
+       RETURNING id, name, email, image, created_at`,
+      [name, email, password, profilePic]
     );
     return rows[0];
   } catch (error) {

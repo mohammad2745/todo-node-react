@@ -39,6 +39,7 @@ const login = async (req, res) => {
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+    const profilePic = req.file ? (req.file.destination + req.file.filename) : null;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required.' });
@@ -51,7 +52,7 @@ const signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await usersModel.createUser({ name, email, password: hashedPassword });
+    const newUser = await usersModel.createUser({ name, email, password: hashedPassword, profilePic });
 
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email },
@@ -61,11 +62,20 @@ const signup = async (req, res) => {
 
     res.status(201).json({
       message: 'User created successfully.',
-      user: { id: newUser.id, name: newUser.name, email: newUser.email },
+      user: { id: newUser.id, name: newUser.name, email: newUser.email, profilePic: newUser.image },
       token,
     });
   } catch (error) {
     console.error('Error during signup:', error);
+
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File size exceeds the 1MB limit.' });
+    }
+
+    if (error.message.includes('Only JPEG, PNG, and JPG')) {
+      return res.status(400).json({ message: error.message });
+    }
+    
     res.status(500).json({ message: 'Server error.' });
   }
 };
